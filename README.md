@@ -182,3 +182,125 @@ c <- ggplot(data = usertype_meantime) +
 # Arrange plots in a grid
 grid.arrange(a, b, c, nrow = 2, ncol = 2)
 ```
+## Analyzing Travel Time by User Type
+
+In this section, we calculate the mean and median travel time for each user type, as well as identify the longest and shortest rides. The following R code demonstrates how to perform these calculations:
+
+```{r}
+# Finding mean and median travel time for each user type
+mean_travel_time <- aggregate(clean_data_combined_v2$travel_time ~ clean_data_combined_v2$Membership.Type, FUN = mean)
+median_travel_time <- aggregate(clean_data_combined_v2$travel_time ~ clean_data_combined_v2$Membership.Type, FUN = median)
+
+# Displaying the results
+print(mean_travel_time)
+print(median_travel_time)
+
+# Finding the longest and shortest ride for each user type
+longest_ride <- aggregate(clean_data_combined_v2$travel_time ~ clean_data_combined_v2$Membership.Type, FUN = max)
+shortest_ride <- aggregate(clean_data_combined_v2$travel_time ~ clean_data_combined_v2$Membership.Type, FUN = min)
+
+# Displaying the results
+print(longest_ride)
+print(shortest_ride)
+```
+### Reorder the 'start_day' factor
+```{r}
+clean_data_combined_v2$start_day <- ordered(clean_data_combined_v2$start_day, 
+                                              levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+```
+
+### Aggregate travel_time by Membership.Type and start_day, calculating the mean
+```{r}
+aggregate(clean_data_combined_v2$travel_time ~ clean_data_combined_v2$Membership.Type + clean_data_combined_v2$start_day, 
+          FUN = mean)
+```
+```{r}
+summary_table <- clean_data_combined_v2 %>%
+  group_by(Membership.Type, start_day) %>%
+  summarize(
+    number_of_rides = n(),
+    average_duration = mean(travel_time, na.rm = TRUE)  # Handle NA values if any
+  ) %>%
+  arrange(Membership.Type, start_day)
+
+# Print the summary table
+print(summary_table
+```
+## Visualization for Number of rides Vs User Type
+```{r}
+ggplot(data = summary_table) + 
+  geom_col(mapping = aes(x = start_day, y = number_of_rides, fill = Membership.Type), position = "dodge") +
+  labs(title = "Number of Rides by Day and User Type", 
+       x = "Day of the Week", 
+       y = "Number of Rides") +
+  scale_y_continuous(limits = c(0, 600000), breaks = seq(0, 600000, by = 100000))
+```
+
+
+## Summarizing the data for specific bike types: classic_bike, electric_bike, and docked_bike
+```{r}
+summary_table_2 <- clean_data_combined_v2 %>%
+  filter(Type %in% c("classic_bike", "electric_bike", "docked_bike")) %>%
+  group_by(Membership.Type, Type) %>%
+  summarize(
+    number_of_ride = n(),
+    mean_travel_time = mean(travel_time, na.rm = TRUE)
+  )
+
+# Print the summarized data
+print(summary_table_2)
+```
+
+## Plotting the number of rides by bike type and user type
+```{r}
+ggplot(data = summary_table_2) +
+  geom_col(mapping = aes(x = Membership.Type, y = number_of_ride, fill = Type), position = "dodge") +
+  scale_fill_manual(values = c("electric_bike" = "#79c36a", 
+                               "classic_bike" = "#599ad3", 
+                               "docked_bike" = "#f39c12")) +  # Color for docked_bike
+  labs(
+    title = "Bike Type Usage by User Type", 
+    x = "User Type", 
+    y = "Number of Rides"
+  ) +
+  theme_minimal()  # Optional: To clean up the plot's appearance
+```
+```{r}
+
+
+# Creating a dataframe containing rideable type, user type, day, and number of rides
+summary_table_3 <- clean_data_combined_v2 %>%
+  filter(Type %in% c("classic_bike", "electric_bike")) %>%  # Filter for the bike types
+  group_by(Membership.Type, Type, start_day) %>%
+  summarize(
+    number_of_ride = n(),
+    mean_travel_time = mean(travel_time, na.rm = TRUE)
+  ) %>%
+  mutate(start_day = factor(start_day, levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))) %>%
+  arrange(start_day)
+
+# Separating the casual and member data into two separate dataframes for the viz
+casual_data <- summary_table_3 %>% filter(Membership.Type == "casual")
+member_data <- summary_table_3 %>% filter(Membership.Type == "member")
+
+# Plot for casual data
+ggplot(data = casual_data) +
+  geom_col(mapping = aes(x = start_day, y = number_of_ride, fill = Type), position = "dodge") +
+  labs(title = "Casual Riders: Bike Type Usage by Day",
+       x = "Day of the Week",
+       y = "Number of Rides") +
+  scale_fill_manual(values = c("electric_bike" = "#79c36a", "classic_bike" = "#599ad3")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate day labels for better readability
+
+# Plot for member data
+ggplot(data = member_data) +
+  geom_col(mapping = aes(x = start_day, y = number_of_ride, fill = Type), position = "dodge") +
+  labs(title = "Member Riders: Bike Type Usage by Day",
+       x = "Day of the Week",
+       y = "Number of Rides") +
+  scale_fill_manual(values = c("electric_bike" = "#746F72", "classic_bike" = "#FFB100")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate day labels for better readability
+
+```
