@@ -94,3 +94,91 @@ table(clean_data_combined$Membership.Type)
 
 table(clean_data_combined$Type)
 ```
+## Chaging the data type of the started_at and ended_at variable from character to POSIXct
+```{r}
+clean_data_combined$started_at <- as.POSIXct(clean_data_combined$started_at, format = "%Y-%m-%d %H:%M:%S")
+clean_data_combined$ended_at <- as.POSIXct(clean_data_combined$ended_at, format = "%Y-%m-%d %H:%M:%S")
+```
+## Extracting start hour and end hour from the started_at and ended_at columns
+```{r}
+
+clean_data_combined$start_hour <- format(clean_data_combined$started_at, "%H")
+clean_data_combined$end_hour <- format(clean_data_combined$ended_at, "%H")
+```
+## Converting the start_time and end_time datatype from char to POSIXct and creating a new column for Travel time
+```{r}
+clean_data_combined$start_time <- as.POSIXct(clean_data_combined$start_time,format = "%H:%M:%S")
+clean_data_combined$end_time <- as.POSIXct(clean_data_combined$end_time,format = "%H:%M:%S")
+clean_data_combined$travel_time <- abs(difftime(clean_data_combined$end_time, clean_data_combined$start_time, units= "mins"))
+
+```
+## Finding out the Travel Distance
+```{r}
+
+
+library("geosphere")
+clean_data_combined$travel_distance <- distGeo(matrix(c(clean_data_combined$start_lng, clean_data_combined$start_lat), ncol = 2), matrix(c(clean_data_combined$end_lng, clean_data_combined$end_lat), ncol = 2))
+clean_data_combined$travel_distance <- clean_data_combined$travel_distance/1000
+```
+## Removing the rows where travel distance is negative
+```{r}
+clean_data_combined_v2 <- clean_data_combined[clean_data_combined$travel_distance > 0.0,]
+dim(clean_data_combined_v2)
+clean_data_combined_v2 <- clean_data_combined_v2[clean_data_combined_v2$travel_time > 0.0,]
+dim (clean_data_combined_v2)
+```
+## Finding out the Travel Speed
+```{r}
+clean_data_combined_v2 <- clean_data_combined_v2 %>%
+  mutate(travel_time = as.numeric(travel_time),
+         travel_time_hours = travel_time / 60,
+         speed = travel_distance / travel_time_hours)
+```
+## Preview Our Final Dataset
+```{r}
+colnames(clean_data_combined_v2)
+head(clean_data_combined_v2)
+```
+# Analysis Phase
+## Analyzing Travel Time and Distance by User Type
+
+In this section, we analyze the travel time, distance, and speed of rides based on user type. The following R code calculates the mean, median, maximum, and minimum travel times, and then summarizes the data by user type.
+
+```r
+# Basic statistics for travel time
+mean(clean_data_combined_v2$travel_time) # Straight average (total ride length / rides)
+median(clean_data_combined_v2$travel_time) # Midpoint number in the ascending array of ride lengths
+max(clean_data_combined_v2$travel_time) # Longest ride
+min(clean_data_combined_v2$travel_time) # Shortest ride
+
+# Finding the mean travel_time for each user type
+usertype_meantime <- clean_data_combined_v2 %>%
+  group_by(Membership.Type) %>%
+  summarize(mean_time = mean(travel_time), 
+            mean_distance = mean(travel_distance), 
+            mean_speed = mean(speed))
+
+print(usertype_meantime)
+
+# Creating visualizations
+library(ggplot2)
+library(gridExtra)
+
+# Mean Ride Time by User Type
+a <- ggplot(data = usertype_meantime) +
+  geom_col(mapping = aes(x = Membership.Type, y = mean_time, fill = Membership.Type), position = "dodge") +
+  labs(title = "Mean Ride Time by User Type", x = "User  Type", y = "Mean Travel Time (mins)")
+
+# Mean Ride Distance by User Type
+b <- ggplot(data = usertype_meantime) +
+  geom_col(mapping = aes(x = Membership.Type, y = mean_distance, fill = Membership.Type), position = "dodge") +
+  labs(title = "Mean Ride Distance by User Type", x = "User  Type", y = "Mean Travel Distance (km)")
+
+# Mean Ride Speed by User Type
+c <- ggplot(data = usertype_meantime) +
+  geom_col(mapping = aes(x = Membership.Type, y = mean_speed, fill = Membership.Type), position = "dodge") +
+  labs(title = "Mean Ride Speed by User Type", x = "User  Type", y = "Mean Travel Speed (km/hr)")
+
+# Arrange plots in a grid
+grid.arrange(a, b, c, nrow = 2, ncol = 2)
+```
