@@ -16,22 +16,39 @@ The main task of this project is finding an answer to the question: How do annua
 library(tidyverse) 
 library("dplyr")
 library(gridExtra)
-## Organizing our data
-At first we have merged all the datasets of 12 months into a single dataset named as 'data_combined'. We used the 'rbind' function to do so.
-t4 <- read.csv("/kaggle/input/cyclistic-bike-share/202104-divvy-tripdata.csv")
-t5 <- read.csv("/kaggle/input/cyclistic-bike-share/202105-divvy-tripdata.csv")
-t6 <- read.csv("/kaggle/input/cyclistic-bike-share/202106-divvy-tripdata.csv")
-t7 <- read.csv("/kaggle/input/cyclistic-bike-share/202107-divvy-tripdata.csv")
-t8 <- read.csv("/kaggle/input/cyclistic-bike-share/202108-divvy-tripdata.csv")
-t9 <- read.csv("/kaggle/input/cyclistic-bike-share/202109-divvy-tripdata.csv")
-t10 <-read.csv("/kaggle/input/cyclistic-bike-share/202110-divvy-tripdata.csv")
-t11 <-read.csv("/kaggle/input/cyclistic-bike-share/202111-divvy-tripdata.csv")
-t12 <-read.csv("/kaggle/input/cyclistic-bike-share/202112-divvy-tripdata.csv")
-t1 <- read.csv("/kaggle/input/cyclistic-bike-share/202201-divvy-tripdata.csv")
-t2 <- read.csv("/kaggle/input/cyclistic-bike-share/202202-divvy-tripdata.csv")
-t3 <- read.csv("/kaggle/input/cyclistic-bike-share/202203-divvy-tripdata.csv")
+## Loading and Combining Datasets
 
-data_combined <- rbind(t4,t5,t6,t7,t8,t9,t10,t11,t12,t1,t2,t3)
+In this project, data from the Divvy bike-sharing service is used, covering several months of rides in 2021 and 2022. Each month’s data is loaded as a separate CSV file and then combined into a single dataset for analysis. 
+
+### Steps to Load and Combine Data:
+
+1. **Load Monthly Datasets:** Each month's data is stored in a separate CSV file, and each file is read into R using `read.csv`. These files are organized by month and year.
+
+    ```r
+    t4 <- read.csv("/kaggle/input/cyclistic-bike-share/202104-divvy-tripdata.csv")
+    t5 <- read.csv("/kaggle/input/cyclistic-bike-share/202105-divvy-tripdata.csv")
+    t6 <- read.csv("/kaggle/input/cyclistic-bike-share/202106-divvy-tripdata.csv")
+    t7 <- read.csv("/kaggle/input/cyclistic-bike-share/202107-divvy-tripdata.csv")
+    t8 <- read.csv("/kaggle/input/cyclistic-bike-share/202108-divvy-tripdata.csv")
+    t9 <- read.csv("/kaggle/input/cyclistic-bike-share/202109-divvy-tripdata.csv")
+    t10 <- read.csv("/kaggle/input/cyclistic-bike-share/202110-divvy-tripdata.csv")
+    t11 <- read.csv("/kaggle/input/cyclistic-bike-share/202111-divvy-tripdata.csv")
+    t12 <- read.csv("/kaggle/input/cyclistic-bike-share/202112-divvy-tripdata.csv")
+    t1 <- read.csv("/kaggle/input/cyclistic-bike-share/202201-divvy-tripdata.csv")
+    t2 <- read.csv("/kaggle/input/cyclistic-bike-share/202202-divvy-tripdata.csv")
+    t3 <- read.csv("/kaggle/input/cyclistic-bike-share/202203-divvy-tripdata.csv")
+    ```
+
+2. **Combine Datasets:** Once each month’s data is loaded, all datasets are combined into a single data frame called `data_combined` using the `rbind` function. This allows for efficient analysis across the entire period.
+
+    ```r
+    data_combined <- rbind(t4, t5, t6, t7, t8, t9, t10, t11, t12, t1, t2, t3)
+    ```
+
+This combined dataset, `data_combined`, now contains all records for the period April 2021 through March 2022, enabling a comprehensive analysis of bike-sharing trends over the year.
+
+
+
 
 ## Finding the number of rows and columns in our dataset
 dim(data_combined)
