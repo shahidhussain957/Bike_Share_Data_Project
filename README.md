@@ -39,8 +39,11 @@ dim(data_combined)
 head(data_combined)
 ## Basic summary of our dataset:
 print ("=========GLIMPSE==============")
+
 glimpse(data_combined)
+
 print ("==========SUMMARY==============")
+
 summary(data_combined)
 # Cleaning and Processing the Data
 ## Dropping the NA value containing rows
@@ -58,4 +61,5 @@ dim(clean_data_combined)
 
 ## Checking the types of inputs we have for member_casual and for the rideable type columns
 table(clean_data_combined$Membership.Type)
+
 table(clean_data_combined$Type)
