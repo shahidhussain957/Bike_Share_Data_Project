@@ -1,0 +1,157 @@
+---
+title: "Bike Share"
+author: "Carrie"
+date: "2024-11-12"
+output: 
+  html_document: 
+    default
+---
+
+```{r setup,include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+library(readr)
+```
+## Introduction
+
+Cyclistic, a leading bike-sharing company, is focused on increasing its profitability by analyzing the behavior of two main user groups: Casual Riders and Annual Members. Casual Riders typically use bikes for short-term trips, while Annual Members are more frequent riders who have purchased a year-long membership. 
+
+By analyzing the usage data from 12 months of user activity, this project aims to uncover key differences in the riding patterns between these two groups. The goal is to use this information to develop targeted marketing strategies that can convert Casual Riders into Annual Members, thereby maximizing revenue and fostering long-term customer loyalty.
+
+The analysis will focus on identifying differences in:
+- Ride frequency
+- Ride duration
+- Ride distance
+- Bike type usage
+
+The insights derived from this analysis will help inform Cyclistic's marketing strategies to encourage Casual Riders to adopt Annual Memberships.
+
+
+## Data Loading and Overview
+In this section, we load and inspect the data that will be used for the analysis. We will examine the first few rows of the data to ensure everything is correctly loaded.
+
+```{r}
+# Specify the path to your RDS files
+# Manually try to load each RDS file
+clean_data_combined_v2 <- readRDS("D:/Google Data analytics notes/R Language/R programming/Cyclist Bike Share Data/clean_data_combined_v2.rds")
+
+summarize_table_3 <- readRDS("D:/Google Data analytics notes/R Language/R programming/Cyclist Bike Share Data/summarize_table_3.rds")
+
+usertype_meantime <- readRDS("D:/Google Data analytics notes/R Language/R programming/Cyclist Bike Share Data/usertype_meantime.rds")
+
+summary_table_2 <- readRDS("D:/Google Data analytics notes/R Language/R programming/Cyclist Bike Share Data/summary_table_2.rds")
+
+summary_table <- readRDS("D:/Google Data analytics notes/R Language/R programming/Cyclist Bike Share Data/summary_table.rds")
+
+
+## Check the data
+head(clean_data_combined_v2)
+head(summarize_table_3)
+head(usertype_meantime)
+head(summary_table_2)
+head(summary_table)
+```
+
+## Calculate mean_time, mean_distance, and mean_speed by Membership.Type
+```{r setup_1,include=FALSE}
+usertype_meantime <- clean_data_combined_v2 %>%
+  group_by(Membership.Type)%>%
+  summarize(mean_time= mean(travel_time), mean_distance = mean(travel_distance), mean_speed = mean(speed))
+
+
+```
+
+## Mean Ride Time by User Type
+
+The following plot shows the mean ride time for both Casual Riders and Annual Members. This comparison helps us understand if one group tends to take longer rides than the other
+```{r}
+  # Mean Ride Time
+  a <- ggplot(data = usertype_meantime) +
+  geom_col(mapping = aes(x =Membership.Type, y = mean_time, fill = Membership.Type), position = "dodge") +
+  labs(title = "Mean Ride Time by User Type", x = "User  Type", y = "Mean Travel Time (mins)")
+  
+  # Mean Ride Distance
+b <- ggplot(data = usertype_meantime) +
+  geom_col(mapping = aes(x = Membership.Type, y = mean_distance, fill = Membership.Type), position = "dodge") +
+  labs(title = "Mean Ride Distance by User Type", x = "User  Type", y = "Mean Travel Distance (km)")
+
+  # Mean Ride Speed
+
+c <- ggplot(data = usertype_meantime) +
+  geom_col(mapping = aes(x = Membership.Type, y = mean_speed, fill = Membership.Type), position = "dodge") +
+  labs(title = "Mean Ride Speed by User Type", x = "User  Type", y = "Mean Travel Speed (km/hr)")
+# This arrange the three plots in grid
+grid.arrange(a,b,c,nrow=2,ncol=2)
+
+```
+
+# Visualization for Number of Rides Vs User Type
+```{r}
+ggplot(data = summary_table)+
+  geom_col(mapping = aes(x=start_day,y=number_of_ride,fill = Membership.Type),position = "dodge")+
+  labs(title = "Number of rides by Day and User Type",x="Day of the Week",y=" Number of Rides")+
+  scale_y_continuous(limits = c(0,600000),breaks = seq(0,600000,by= 100000))
+```
+
+# Bike Type Usage by User Type
+```{r}
+  ggplot(data=summary_table_2)+
+  geom_col(mapping = aes(x=Membership.Type,y=number_of_ride,fill = Type),position = "dodge")+
+  scale_fill_manual(values = c(electric_bike="#79c36a","classic_bike"="#599ad3","docked_bike"="#599cd3"))+
+  labs(title = "Bike Type Usage by User Type",
+       x="User Type",
+       y="Number of Ride",
+      fill="Bike Type" )
+```
+
+# Creating a dataframe containing rideable type, user type, day, and number of rides
+```{r}
+# Filter the data to include only relevant bike types and group by user type and day
+summarize_table_3 <- clean_data_combined_v2 %>%
+  filter(Type == "classic_bike" | Type == "electric_bike" | Type=="docked_bike") %>% group_by(Membership.Type, Type, start_day) %>%  
+  summarize(number_of_ride = n(),
+    mean_travel_time = mean(travel_time, na.rm = TRUE) 
+  ) %>%
+   # Ensure the start_day column is ordered correctly (days of the week)
+  mutate(stsrt_day = factor(start_day, levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))) %>%
+  arrange(start_day)
+
+
+print(summarize_table_3)
+
+```
+
+## Separting the Casual and Annual Member data into two separte data frame for the visualization
+```{r}
+
+  casual_data <- summarize_table_3 %>% filter(Membership.Type=="casual")
+  annual_member <- summarize_table_3 %>% filter(Membership.Type=="member")
+  
+  ggplot(data=casual_data)+
+    geom_col(mapping = aes(x=start_day,y=number_of_ride,fill=Type),position="dodge")
+  
+   ggplot(data=annual_member)+
+    geom_col(mapping = aes(x=start_day,y=number_of_ride,fill=Type),position="dodge")+
+     scale_fill_manual(values = c(electric_bike="#79c36a","classic_bike"="#599ad3","docked_bike"="#599cd3" ))
+```
+## Observations:
+There seems to be an unexpected preference towards classic bike compared to electric bike for both casual users and annual members during this time period.
+
+The preference seems to be higher in case of annual members.
+
+The number of rides specific to the day of the week do not provude any significant pattern.
+
+## Conclusions:
+Casual riders tend to use the bikes more on the weekends, however annual members have been seen to use the bikes equally throughout the week, suggesting that the casual riders probably use the bikes for leisurely weekend rides rather than as a daily commute to work.
+
+The average speed of the casual riders is lower compared to the annual members, further solidifying the idea of a more leisurely approach of biking for the casual riders.
+
+An unexpected preference for the classic bike has been seen for both the casual riders and annual members
+
+## Recomendation: 
+A weekend specific discount for the annual members, to influence the casual riders to change to an annual membership, as they ride mostly on weekends.
+
+Advertisements focusing on the benefits of using the service as a means of daily commute to work.
+
+Conducting a public survey to understand the issues related to the electric bikes.
