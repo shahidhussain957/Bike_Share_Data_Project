@@ -13,9 +13,10 @@ The company wants develop an effective marketing strategy for the casual riders 
 
 The main task of this project is finding an answer to the question: How do annual members and casual riders use Cyclistic bikes differently?
 # installing the packages needed for the analysis
-library(tidyverse) 
+```{r}library(tidyverse) 
 library("dplyr")
 library(gridExtra)
+```
 ## Loading and Combining Datasets
 
 In this project, data from the Divvy bike-sharing service is used, covering several months of rides in 2021 and 2022. Each month’s data is loaded as a separate CSV file and then combined into a single dataset for analysis. 
@@ -51,32 +52,45 @@ This combined dataset, `data_combined`, now contains all records for the period 
 
 
 ## Finding the number of rows and columns in our dataset
-dim(data_combined)
+```{r}dim(data_combined)
+```
 ## Preview of the dataset
+```{r}
 head(data_combined)
+```
 ## Basic summary of our dataset:
+```{r}
 print ("=========GLIMPSE==============")
+```
 
 glimpse(data_combined)
-
+```{r}
 print ("==========SUMMARY==============")
-
+```
 summary(data_combined)
 # Cleaning and Processing the Data
 ## Dropping the NA value containing rows
+```{r}
 clean_data_combined <-  drop_na(data_combined)
 dim(clean_data_combined)
-
+```
 ## Chekcking the number of character in the first row
+```{r}
 nchar(clean_data_combined$ride_id[1])
+```
 ## Filtering only those rows that have a valid ride id
+```{r}
 clean_data_combined <- clean_data_combined %>%
-  filter(nchar(ride_id)==16) 
+  filter(nchar(ride_id)==16)
+``` 
 
 ## Checking the number of rows that had invalid ride id  
+```{r}
 dim(clean_data_combined)
-
+```
 ## Checking the types of inputs we have for member_casual and for the rideable type columns
+```[r}
 table(clean_data_combined$Membership.Type)
 
 table(clean_data_combined$Type)
+```
